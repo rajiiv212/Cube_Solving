@@ -75,42 +75,21 @@ def face(face_name, center_color):
             if st.button(" ", key=f"cell_{face_name}_{i}") and i != 4:
                 if st.session_state.clicked_color:
                     st.session_state[face_name][i] = st.session_state.clicked_color
-        CSS = """
-                    .grid {
-                        display: grid;
-                        grid-template-columns: repeat(3, 40px);
-                        gap: 2px;
-                    }
 
-                    .grid button {
-                        height: 40px;
-                        width: 40px;
-                        font-size: 18px;
-                    }
-                    """
+            # dynamic CSS for this button
+            CSS = f"""
+div[class*="st-key-cell_{face_name}_{i}"] button {{
+    width:40px;
+    height:40px;
+    background-color:{st.session_state[face_name][i]};
+    border:2px solid black;
+    border-radius:4px;
+    margin-top:0px;
+}}
+"""
+            st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
 
-        st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
-
-#             # dynamic CSS for this button
-#                 CSS = f"""
-# div[class*="st-key-cell_{face_name}_{i}"] 
-# grid {{
-#     display: grid;
-#     grid-template-columns: repeat(3, 40px);
-#     gap: 2px;
-# }}
-# grid button {{
-#     width:40px;
-#     height:40px;
-#     background-color:{st.session_state[face_name][i]};
-#     border:2px solid black;
-#     border-radius:4px;
-#     margin-top:0px;
-# }}
-# """
-#                 st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
-
-    # return " ".join(st.session_state[face_name])
+    return " ".join(st.session_state[face_name])
 
 
 # -------------------------
@@ -149,44 +128,3 @@ st.write("Front:", front_face)
 st.write("Right:", right_face)
 st.write("Back:", back_face)
 st.write("Down:", down_face)
-
-
-
-import streamlit as st
-
-CSS = """
-.grid {
-    display: grid;
-    grid-template-columns: repeat(3, 40px);
-    gap: 2px;
-}
-
-.grid button {
-    height: 40px;
-    width: 40px;
-    font-size: 18px;
-}
-"""
-
-st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
-
-
-for i in range(3):
-    for j in range(3):
-
-    st.button(str(i), key=f"cell_{i}")
-
-
-st.markdown("""
-<div class="grid">
-<button>1</button>
-<button>2</button>
-<button>3</button>
-<button>4</button>
-<button>5</button>
-<button>6</button>
-<button>7</button>
-<button>8</button>
-<button>9</button>
-</div>
-""", unsafe_allow_html=True)

@@ -1,0 +1,60 @@
+
+st.markdown("")
+st.markdown("")
+
+# https://github.com/mmadrz/rubikcube
+# https://rubiks-42ffmuw4yqimrtjobazgas.streamlit.app/
+
+
+def face(color):
+    # Build the string representation of the face
+    face_str = " ".join([
+        color if r==1 and c==1 else "lightgray"
+        for r in range(3) for c in range(3)
+    ])
+    
+    # Display the face in Streamlit
+    st.markdown(
+        f"""<div style=" display:flex; flex-direction:column; gap:2px; cursor:pointer; "> """ +
+        "".join([
+            f'<div style="display:flex; gap:1px;">' +
+            "".join([
+                f'<div style="width:35px; height:35px; background-color:{color if r==1 and c==1 else "lightgray"}; border:1px solid black; border-radius:4px;"></div>'
+                for c in range(3)
+            ]) + '</div>' for r in range(3)
+        ]) + "</div>",
+        unsafe_allow_html=True
+    )
+    
+    # Return the single-line string representation
+    return face_str
+
+# Example usage:
+cols = st.columns([1,1,1,1,1,1])
+with cols[1]:  # aligns with Front
+    up_face_str = face("white")        # Up
+
+st.markdown("")
+cols = st.columns(6)
+with cols[0]:
+    left_face_str = face("orange")     # Left
+with cols[1]:
+    front_face_str = face("green")     # Front
+with cols[2]:
+    right_face_str = face("red")       # Right
+with cols[3]:
+    back_face_str = face("skyblue")    # Back
+
+st.markdown("")
+cols = st.columns([1,1,1,1,1,1])
+with cols[1]:
+    down_face_str = face("yellow")     # Down
+
+st.markdown("")
+# # Now all faces are stored as strings:
+# st.write("face(white):", up_face_str)
+# st.write("face(orange):", left_face_str)
+# st.write("face(green):", front_face_str)
+# st.write("face(red):", right_face_str)
+# st.write("face(skyblue):", back_face_str)
+# st.write("face(yellow):", down_face_str)
