@@ -128,3 +128,18 @@ st.write("Front:", front_face)
 st.write("Right:", right_face)
 st.write("Back:", back_face)
 st.write("Down:", down_face)
+
+
+
+CSS = """
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 40px);
+    gap: 2px;
+}
+
+.grid button {
+    height: 40px;
+    width: 40px;
+    font-size: 18px;
+}

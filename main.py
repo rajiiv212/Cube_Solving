@@ -51,7 +51,10 @@ class ColorButtons:
 
     def show_result(self):
         if st.session_state.clicked_color:
-            st.write("Selected color:", st.session_state.clicked_color)
+            if(st.session_state.clicked_color == "none"):
+                st.write("")
+            else:
+                st.write("Selected color:", st.session_state.clicked_color)
 
 
 ColorButtons()
@@ -65,79 +68,118 @@ def face(face_name, center_color):
         st.session_state[face_name] = ["lightgray"] * 9
         st.session_state[face_name][4] = center_color  # center is fixed
 
-    # create 3 columns per row
-    cols = st.columns(3)
+    # Draw 9 buttons sequentially; they will be arranged by CSS grid on their parent vertical block
+    for i in range(9):
+        # button click
+        if st.button(" ", key=f"cell_{face_name}_{i}") and i != 4:
+            if "clicked_color" in st.session_state and st.session_state.clicked_color:
+                st.session_state[face_name][i] = st.session_state.clicked_color
+                st.rerun()
+
+    # Produce CSS rules for the exact colors and 3x3 grid uniform layout with 4px gap
+    css_rules = []
+    
+    css_rules.append(f"""
+        /* Target the vertical block holding this column's buttons and turn it into a CSS Grid */
+        /* Checks for both "column" and "stColumn" depending on Streamlit version */
+        div[data-testid="column"]:has(div[class*="st-key-cell_{face_name}_0"]) > div,
+        div[data-testid="stColumn"]:has(div[class*="st-key-cell_{face_name}_0"]) > div {{
+            display: grid !important;
+            grid-template-columns: repeat(3, 40px) !important;
+            grid-template-rows: repeat(3, 40px) !important;
+            gap: 2px !important;
+            width: max-content !important;
+            justify-content: center !important;
+            align-content: center !important;
+        }}
+
+        /* Hide the container for the injected <style> block so it doesn't break the 3x3 layout */
+        div[data-testid="column"]:has(div[class*="st-key-cell_{face_name}_0"]) > div > div:not(:has(.stButton)),
+        div[data-testid="stColumn"]:has(div[class*="st-key-cell_{face_name}_0"]) > div > div:not(:has(.stButton)) {{
+            display: none !important;
+        }}
+    """)
 
     for i in range(9):
-        with cols[i % 3]:
+        color = st.session_state[face_name][i]
+        css_rules.append(f"""
+        div[class*="st-key-cell_{face_name}_{i}"] button {{
+            background-color: {color} !important;
+            width: 40px !important;
+            height: 40px !important;
+            min-height: 40px !important;
+            margin: 0px !important;
+            padding: 0px !important;
+            border: 2px solid black !important;
+            border-radius: 4px !important;
+            display: block !important;
+        }}
+        """)
+        
+    st.markdown(f"<style>{''.join(css_rules)}</style>", unsafe_allow_html=True)
 
-            # button click (skip center)
-            if st.button(" ", key=f"cell_{face_name}_{i}") and i != 4:
-                if st.session_state.clicked_color:
-                    st.session_state[face_name][i] = st.session_state.clicked_color
-        CSS = """
-                    .grid {
-                        display: grid;
-                        grid-template-columns: repeat(3, 40px);
-                        gap: 2px;
-                    }
-
-                    .grid button {
-                        height: 40px;
-                        width: 40px;
-                        font-size: 18px;
-                    }
-                    """
-
-        st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
-
-#             # dynamic CSS for this button
-#                 CSS = f"""
-# div[class*="st-key-cell_{face_name}_{i}"] 
-# grid {{
-#     display: grid;
-#     grid-template-columns: repeat(3, 40px);
-#     gap: 2px;
-# }}
-# grid button {{
-#     width:40px;
-#     height:40px;
-#     background-color:{st.session_state[face_name][i]};
-#     border:2px solid black;
-#     border-radius:4px;
-#     margin-top:0px;
-# }}
-# """
-#                 st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
-
-    # return " ".join(st.session_state[face_name])
+    return " ".join(st.session_state[face_name])
 
 
 # -------------------------
 # CUBE LAYOUT
 # -------------------------
-st.markdown("")
+with st.container():
+    st.markdown("<div class='cube-layout-marker'></div>", unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    /* 1) Vertical block holding the 3 horizontal rows of faces */
+    div:has(> div[data-testid="stElementContainer"] .cube-layout-marker), 
+    div:has(> div[data-testid="element-container"] .cube-layout-marker) {
+        gap: 2px !important;
+    }
+    
+    /* 2) Horizontal blocks (the rows holding the face columns) */
+    div:has(> div[data-testid="stElementContainer"] .cube-layout-marker) div[data-testid="stHorizontalBlock"],
+    div:has(> div[data-testid="element-container"] .cube-layout-marker) div[data-testid="stHorizontalBlock"] {
+        gap: 2px !important;
+        align-items: start !important;
+    }
 
-cols = st.columns([1,1,1,1,1,1])
-with cols[1]:
-    up_face = face("up", "white")
+    /* 3) Adjust all columns within the cube layout to be perfectly 124px 
+          This matches the 3x40px buttons + 2x2px gaps for each face.
+          Forcing this width ensures perfect alignment for the empty slots! */
+    div:has(> div[data-testid="stElementContainer"] .cube-layout-marker) div[data-testid="stColumn"],
+    div:has(> div[data-testid="element-container"] .cube-layout-marker) div[data-testid="column"],
+    div:has(> div[data-testid="stElementContainer"] .cube-layout-marker) div[data-testid="column"],
+    div:has(> div[data-testid="element-container"] .cube-layout-marker) div[data-testid="stColumn"] {
+        padding: 0px !important;
+        min-width: 124px !important; 
+        max-width: 124px !important;
+        width: 124px !important;
+        flex: none !important;
+    }
+    
+    /* Hide marker wrapper */
+    div[data-testid="stElementContainer"]:has(.cube-layout-marker), 
+    div[data-testid="element-container"]:has(.cube-layout-marker) {
+        display: none !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-st.markdown("")
+    cols = st.columns([1,1,1,1,1,1])
+    with cols[1]:
+        up_face = face("up", "white")
 
-cols = st.columns(6)
-with cols[0]:
-    left_face = face("left", "orange")
-with cols[1]:
-    front_face = face("front", "green")
-with cols[2]:
-    right_face = face("right", "red")
-with cols[3]:
-    back_face = face("back", "skyblue")
+    cols = st.columns(6)
+    with cols[0]:
+        left_face = face("left", "orange")
+    with cols[1]:
+        front_face = face("front", "green")
+    with cols[2]:
+        right_face = face("right", "red")
+    with cols[3]:
+        back_face = face("back", "skyblue")
 
-st.markdown("")
-cols = st.columns([1,1,1,1,1,1])
-with cols[1]:
-    down_face = face("down", "yellow")
+    cols = st.columns([1,1,1,1,1,1])
+    with cols[1]:
+        down_face = face("down", "yellow")
 
 # -------------------------
 # SHOW STORED FACES
@@ -150,43 +192,41 @@ st.write("Right:", right_face)
 st.write("Back:", back_face)
 st.write("Down:", down_face)
 
+# -------------------------
+# CUBE STATISTICS
+# -------------------------
+st.divider()
+st.subheader("Cube Statistics")
 
+# Convert the space-separated output strings back into lists of colors
+up_list = up_face.split()
+left_list = left_face.split()
+front_list = front_face.split()
+right_list = right_face.split()
+back_list = back_face.split()
+down_list = down_face.split()
 
-import streamlit as st
+# Combine all 54 squares to count the total of each color
+all_squares = up_list + left_list + front_list + right_list + back_list + down_list
 
-CSS = """
-.grid {
-    display: grid;
-    grid-template-columns: repeat(3, 40px);
-    gap: 2px;
-}
+# Display the count of each color
+st.write("**Total Colors Present:**")
+# 'colors' is defined directly at the top of main.py
+track_colors = colors + ["lightgray"]
+count_cols = st.columns(len(track_colors))
 
-.grid button {
-    height: 40px;
-    width: 40px;
-    font-size: 18px;
-}
-"""
+for i, color in enumerate(track_colors):
+    count = all_squares.count(color)
+    with count_cols[i]:
+        st.metric(label=color.capitalize(), value=count)
 
-st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
+# Calculate how many squares currently match their fixed center color
+solved_count = 0
+solved_count += sum(1 for c in up_list if c == "white")
+solved_count += sum(1 for c in left_list if c == "orange")
+solved_count += sum(1 for c in front_list if c == "green")
+solved_count += sum(1 for c in right_list if c == "red")
+solved_count += sum(1 for c in back_list if c == "skyblue")
+solved_count += sum(1 for c in down_list if c == "yellow")
 
-
-for i in range(3):
-    for j in range(3):
-
-    st.button(str(i), key=f"cell_{i}")
-
-
-st.markdown("""
-<div class="grid">
-<button>1</button>
-<button>2</button>
-<button>3</button>
-<button>4</button>
-<button>5</button>
-<button>6</button>
-<button>7</button>
-<button>8</button>
-<button>9</button>
-</div>
-""", unsafe_allow_html=True)
+st.write(f"**Solved squares:** {solved_count} / 54")
