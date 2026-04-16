@@ -1,4 +1,4 @@
-# import kociemba
+import kociemba
 
 # # Example cube state
 # # Each face is represented by 9 characters in the order: Up, Right, Front, Down, Left, Back
@@ -21,27 +21,46 @@
 
 
 
-from rubik_solver import utils
+import kociemba
 
-# Map color names to cube notation (Standard Kociemba: U=Up, R=Right, F=Front, D=Down, L=Left, B=Back)
+# Map color names to cube notation
 color_to_letter = {
     "white": "U",
     "red": "R",
-    "green": "F",
+    "skyblue": "F",
     "yellow": "D",
     "orange": "L",
-    "skyblue": "B"
+    "green": "B"
 }
 
-def solve_cube(cube_state):
+def get_cube_input_colors():
+    print("Enter your cube colors face by face.")
+    print("Faces order: Up, Right, Front, Down, Left, Back")
+    print("Colors: white, red, blue, yellow, orange, green")
+    
+    faces = ["Up", "Right", "Front", "Down", "Left", "Back"]
+    cube_state = ""
+    
+    for face in faces:
+        while True:
+            face_input = input(f"{face} face (9 colors separated by space): ").strip().lower().split()
+            if len(face_input) == 9 and all(c in color_to_letter for c in face_input):
+                cube_state += "".join(color_to_letter[c] for c in face_input)
+                break
+            else:
+                print("Invalid input! Enter exactly 9 colors from the list.")
+    
+    return cube_state
+
+def main():
+    cube_state = get_cube_input_colors()
+    
     try:
-        solution = utils.solve(cube_state, 'Kociemba')
-        return " ".join(str(move) for move in solution)
+        solution = kociemba.solve(cube_state)
+        print("\nSolution to solve the cube:")
+        print(solution)
     except Exception as e:
-        return f"Error solving cube: {e}"
+        print("Error solving cube:", e)
 
 if __name__ == "__main__":
-    # Test state
-    test_state = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB"
-    print("Solution:", solve_cube(test_state))
-
+    main()
