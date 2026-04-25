@@ -265,7 +265,63 @@ back_list = back_face.split()
 down_list = down_face.split()
 
 # Combine all 54 squares to count the total of each color
-all_squares = up_list + left_list + front_list + right_list + back_list + down_list
+#   faces = ["Up", "Right", "Front", "Down", "Left", "Back"]
+
+all_squares = up_list + right_list + front_list + down_list + left_list  + back_list
+
+st.markdown(all_squares)
+
+import streamlit as st
+import kociemba
+
+class RubiksCubeSolver:
+    def __init__(self):
+        self.color_to_letter = {
+            "white": "U",
+            "red": "R",
+            "skyblue": "F",
+            "yellow": "D",
+            "orange": "L",
+            "green": "B"
+        }
+
+    def build_cube_state(self, all_squares):
+        if len(all_squares) != 54:
+            raise ValueError("all_squares must contain exactly 54 elements")
+
+        cube_state = ""
+        for color in all_squares:
+            color = color.strip().lower()
+            if color not in self.color_to_letter:
+                raise ValueError(f"Invalid color: {color}")
+            cube_state += self.color_to_letter[color]
+
+        return cube_state
+
+    def solve(self, all_squares):
+        cube_state = self.build_cube_state(all_squares)
+        return kociemba.solve(cube_state)
+
+
+solver = RubiksCubeSolver()
+
+st.title("Rubik's Cube Solver")
+
+# # Example input (replace this with your real all_squares source)
+# all_squares = st.text_area("Enter 54 colors separated by space").split()
+
+missing = all_squares.count("lightgray")
+
+if st.button("Solve Cube"):
+    if missing > 0:
+        st.error("Please enter all colors")
+    else:
+        result = solver.solve(all_squares)
+        st.success("Solution found!")
+        st.code(result)
+
+
+
 
 # Display the count of each color
 st.write("**Total Colors Present:**")

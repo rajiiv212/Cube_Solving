@@ -2,3 +2,4 @@ streamlit
 streamlit
 numpy
 opencv-python
+kociemba
