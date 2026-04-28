@@ -321,7 +321,64 @@ if st.button("Solve Cube"):
         st.code(result)
 
 
+with st.sidebar:
+    st.title("Cube Controls")
 
+    st.subheader("Cube actions")
+    c1, c2 = st.columns(2)
+
+    with c1:
+        if st.button("Scramble", use_container_width=True):
+            moves = st.session_state.cube.scramble(st.session_state.scramble_moves)
+            st.session_state.move_history = moves.copy()
+            st.session_state.solution = []
+            st.session_state.current_step = 0
+            st.session_state.auto_playing = False
+            st.session_state.animation_progress = 0
+            st.rerun()
+
+    with c2:
+        if st.button("Solve", use_container_width=True):
+            solver = RubiksSolver()
+            solution = solver.solve(st.session_state.cube)
+            if solution is not None:
+                st.session_state.solution = solution
+                st.session_state.current_step = 0
+                st.session_state.auto_playing = True
+            else:
+                st.session_state.solution = []
+                st.session_state.auto_playing = False
+
+    if st.button("Reset cube", use_container_width=True):
+        st.session_state.cube = RubiksCube()
+        st.session_state.solution = []
+        st.session_state.current_step = 0
+        st.session_state.auto_playing = False
+        st.session_state.move_history = []
+        st.session_state.animation_progress = 0
+        st.rerun()
+
+    st.markdown("---")
+
+    st.subheader("Manual moves")
+    moves = ["F", "R", "U", "B", "L", "D"]
+    primes = ["", "'", "2"]
+
+    for mv in moves:
+        cols = st.columns(3)
+        for i, p in enumerate(primes):
+            mvstr = mv + p
+            if cols[i].button(mvstr, use_container_width=True):
+                st.session_state.pending_move = mvstr
+                st.session_state.animation_progress = 0.001
+                st.session_state.rotating_face = mv
+
+                if mvstr.endswith("2"):
+                    st.session_state.clockwise = None
+                else:
+                    st.session_state.clockwise = not mvstr.endswith("'")
+
+                st.session_state.auto_playing = False
 
 # Display the count of each color
 st.write("**Total Colors Present:**")
