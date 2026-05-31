@@ -271,8 +271,12 @@ all_squares = up_list + right_list + front_list + down_list + left_list  + back_
 
 st.markdown(all_squares)
 
-import streamlit as st
-import kociemba
+try:
+    import kociemba
+    kociemba_available = True
+except ModuleNotFoundError:
+    kociemba = None
+    kociemba_available = False
 
 class RubiksCubeSolver:
     def __init__(self):
@@ -299,6 +303,9 @@ class RubiksCubeSolver:
         return cube_state
 
     def solve(self, all_squares):
+        if not kociemba_available:
+            raise RuntimeError("The kociemba solver is not installed in the current environment.")
+
         cube_state = self.build_cube_state(all_squares)
         return kociemba.solve(cube_state)
 
@@ -307,88 +314,29 @@ solver = RubiksCubeSolver()
 
 st.title("Rubik's Cube Solver")
 
-# # Example input (replace this with your real all_squares source)
-# all_squares = st.text_area("Enter 54 colors separated by space").split()
+if not kociemba_available:
+    st.warning(
+        "The Rubik's cube solving engine is not available because the `kociemba` package is missing. "
+        "Install it in the virtual environment or use a Python interpreter with the required dependencies."
+    )
+    st.info(
+        "If you want the solver, run: `.venv\\Scripts\\python.exe -m pip install kociemba` "
+        "and restart the app."
+    )
 
 missing = all_squares.count("lightgray")
 
-if st.button("Solve Cube"):
+if st.button("Solve Cube", disabled=not kociemba_available):
     if missing > 0:
         st.error("Please enter all colors")
     else:
-        result = solver.solve(all_squares)
-        st.success("Solution found!")
-        st.code(result)
+        try:
+            result = solver.solve(all_squares)
+            st.success("Solution found!")
+            st.code(result)
+        except Exception as exc:
+            st.error(f"Solver error: {exc}")
 
-
-with st.sidebar:
-    st.title("Cube Controls")
-
-    st.subheader("Cube actions")
-    c1, c2 = st.columns(2)
-
-    with c1:
-        if st.button("Scramble", use_container_width=True):
-            moves = st.session_state.cube.scramble(st.session_state.scramble_moves)
-            st.session_state.move_history = moves.copy()
-            st.session_state.solution = []
-            st.session_state.current_step = 0
-            st.session_state.auto_playing = False
-            st.session_state.animation_progress = 0
-            st.rerun()
-
-    with c2:
-        if st.button("Solve", use_container_width=True):
-            solver = RubiksSolver()
-            solution = solver.solve(st.session_state.cube)
-            if solution is not None:
-                st.session_state.solution = solution
-                st.session_state.current_step = 0
-                st.session_state.auto_playing = True
-            else:
-                st.session_state.solution = []
-                st.session_state.auto_playing = False
-
-    if st.button("Reset cube", use_container_width=True):
-        st.session_state.cube = RubiksCube()
-        st.session_state.solution = []
-        st.session_state.current_step = 0
-        st.session_state.auto_playing = False
-        st.session_state.move_history = []
-        st.session_state.animation_progress = 0
-        st.rerun()
-
-    st.markdown("---")
-
-    st.subheader("Manual moves")
-    moves = ["F", "R", "U", "B", "L", "D"]
-    primes = ["", "'", "2"]
-
-    for mv in moves:
-        cols = st.columns(3)
-        for i, p in enumerate(primes):
-            mvstr = mv + p
-            if cols[i].button(mvstr, use_container_width=True):
-                st.session_state.pending_move = mvstr
-                st.session_state.animation_progress = 0.001
-                st.session_state.rotating_face = mv
-
-                if mvstr.endswith("2"):
-                    st.session_state.clockwise = None
-                else:
-                    st.session_state.clockwise = not mvstr.endswith("'")
-
-                st.session_state.auto_playing = False
-
-# Display the count of each color
-st.write("**Total Colors Present:**")
-# 'colors' is defined directly at the top of main.py
-track_colors = colors + ["lightgray"]
-count_cols = st.columns(len(track_colors))
-
-for i, color in enumerate(track_colors):
-    count = all_squares.count(color)
-    with count_cols[i]:
         st.metric(label=color.capitalize(), value=count)
 
 # Calculate how many squares currently match their fixed center color
